@@ -5,6 +5,9 @@
 export const environment = {
   production: false,
   wilayah: 'http://mff-gateway-dev.apps.ocp4dev.muf.co.id/mdm/wilayah/',
+  detailUser: 'http://mdm-skeleton-java-dev.apps.ocp4dev.muf.co.id/auth/',
+  urlSkeleton:
+    'http://mdm-skeleton-dev.apps.ocp4dev.muf.co.id/#/dashboard/layout',
 };
 
 /*

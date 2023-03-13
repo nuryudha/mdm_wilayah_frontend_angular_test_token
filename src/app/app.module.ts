@@ -31,6 +31,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { NgModule } from '@angular/core';
+import { NgxSpinnerModule } from 'ngx-spinner';
 import { NumberOnlyDirective } from './directives/number-only.directive';
 import { PageNotFoundComponent } from './component/page-not-found/page-not-found.component';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -86,6 +87,7 @@ import { WilayahProvinsiComponent } from './component/wilayah-provinsi/wilayah-p
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
+    NgxSpinnerModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
