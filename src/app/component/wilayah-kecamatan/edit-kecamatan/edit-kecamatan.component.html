@@ -1,0 +1,112 @@
+<div class="container-fluid">
+  <div class="m-2">
+    <h1 style="font-family: 'Lucida Sans'">Edit Kecamatan</h1>
+  </div>
+  <div class="row mt-3">
+    <div class="col-12">
+      <form (ngSubmit)="saveEditKecamatan()" [formGroup]="formValidasi">
+        <mat-card
+          [ngClass]="{ loading: isLoading }"
+          class="mb-5 toCenter"
+          style="width: 655px; height: 455px"
+        >
+          <div *ngIf="data">
+            <mat-form-field appearance="outline" style="width: 100%">
+              <mat-label>ID Provinsi</mat-label>
+              <input
+                matInput
+                formControlName="idKecamatan"
+                name="idKecamatan"
+                required
+                appearance="outline"
+                [(ngModel)]="idKecamatan"
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline" style="width: 100%">
+              <mat-label>Kecamatan</mat-label>
+              <input
+                matInput
+                formControlName="namaKecamatan"
+                name="namaKecamatan"
+                oninput="this.value = this.value.toUpperCase()"
+                required
+                appearance="outline"
+                [(ngModel)]="namaKecamatan"
+                maxlength="50"
+              />
+              <mat-error> Kecamatan tidak boleh kosong </mat-error>
+            </mat-form-field>
+            <mat-form-field
+              appearance="outline"
+              style="width: 100%"
+              (click)="getDataKabupaten()"
+            >
+              <mat-label>Kabupaten/Kota </mat-label>
+              <input
+                matInput
+                formControlName="namaKabupaten"
+                name="namaKabupaten"
+                appAlfabetOnly
+                required
+                appearance="outline"
+                [(ngModel)]="namaKabupaten"
+              />
+              <mat-icon matSuffix>search</mat-icon>
+              <mat-error>Kabupaten/Kota tidak boleh kosong </mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline" style="width: 100%">
+              <mat-label>Provinsi</mat-label>
+              <mat-select
+                formControlName="selectNameProvinsi"
+                name="selectNameProvinsi"
+                [(ngModel)]="selectNameProvinsi"
+                required
+              >
+                <mat-option>None</mat-option>
+                <mat-option
+                  *ngFor="let element of dataProvinsi"
+                  [value]="element.provinceName"
+                  >{{
+                    element.provinceId + " - " + element.provinceName
+                  }}</mat-option
+                >
+              </mat-select>
+              <mat-error>Provinsi tidak boleh kosong </mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline" style="width: 100%">
+              <mat-label>Negara</mat-label>
+              <mat-select
+                formControlName="selectNameNegara"
+                name="selectNameNegara"
+                required
+                [(ngModel)]="selectNameNegara"
+              >
+                <mat-option>None</mat-option>
+                <mat-option
+                  *ngFor="let element of dataNegara"
+                  [value]="element.countryNameIdn"
+                  >{{
+                    element.countryId + " - " + element.countryNameIdn
+                  }}</mat-option
+                >
+              </mat-select>
+              <mat-error>Negara tidak boleh kosong </mat-error>
+            </mat-form-field>
+            <button
+              mat-raised-button
+              color="primary"
+              class="mx-3"
+              (click)="saveEditKecamatan()"
+            >
+              Save
+            </button>
+            <button mat-raised-button routerLink="/wilayah-kecamatan/{{ nik }}">
+              Cancel
+            </button>
+          </div>
+          <mat-spinner *ngIf="isLoading"></mat-spinner>
+        </mat-card>
+      </form>
+    </div>
+  </div>
+</div>
