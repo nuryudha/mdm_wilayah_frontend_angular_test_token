@@ -8,7 +8,7 @@ import { Negara } from 'src/app/model/negaraModel';
 import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../wilayah.service';
+import { WilayahService } from '../../services/wilayah.service';
 
 @Component({
   selector: 'app-wilayah-negara',
@@ -117,34 +117,36 @@ export class WilayahNegaraComponent implements OnInit {
             '&size=' +
             this.pageSize
         )
-        .subscribe((res) => {
-          this.pageEvent = e;
-          this.pageSize = e.pageSize;
-          this.pageIndex = e.pageIndex;
-          console.log(res);
-          this.totalRec = res.body.paging.totalrecord;
-          console.log(this.totalRec);
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataNegara.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              countryId: element.countryId,
-              countryNameIdn: element.countryNameIdn,
+        .subscribe(
+          (res) => {
+            this.pageEvent = e;
+            this.pageSize = e.pageSize;
+            this.pageIndex = e.pageIndex;
+            console.log(res);
+            this.totalRec = res.body.paging.totalrecord;
+            console.log(this.totalRec);
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataNegara.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                countryId: element.countryId,
+                countryNameIdn: element.countryNameIdn,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataNegara);
-        },
-        (error) => {
-          console.log(error);
-          console.log(error.error.error);
-          let errorText = error.error.error;
-          Swal.fire({
-            position: 'center',
-            icon: 'error',
-            title: errorText,
-            showConfirmButton: true,
-          })
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataNegara);
+          },
+          (error) => {
+            console.log(error);
+            console.log(error.error.error);
+            let errorText = error.error.error;
+            Swal.fire({
+              position: 'center',
+              icon: 'error',
+              title: errorText,
+              showConfirmButton: true,
+            });
+          }
+        );
     } else {
       this.dataSearchNegara = [];
       this.wilayahService

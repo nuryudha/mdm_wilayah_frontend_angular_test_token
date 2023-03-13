@@ -6,7 +6,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Negara } from 'src/app/model/negaraModel';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../../wilayah.service';
+import { WilayahService } from '../../../services/wilayah.service';
 
 @Component({
   selector: 'app-create-provinsi',

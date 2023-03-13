@@ -9,7 +9,7 @@ import { Provinsi } from 'src/app/model/provinsiModel';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../wilayah.service';
+import { WilayahService } from '../../services/wilayah.service';
 
 @Component({
   selector: 'app-wilayah-provinsi',
@@ -161,35 +161,37 @@ export class WilayahProvinsiComponent implements OnInit {
             '&size=' +
             this.pageSize
         )
-        .subscribe((res) => {
-          this.pageEvent = e;
-          this.pageSize = e.pageSize;
-          this.pageIndex = e.pageIndex;
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataProvinsi.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              countryNameIdn: element.countryNameIdn,
-              countryId: element.countryId,
-              provinceId: element.provinceId,
-              provinceName: element.provinceName,
+        .subscribe(
+          (res) => {
+            this.pageEvent = e;
+            this.pageSize = e.pageSize;
+            this.pageIndex = e.pageIndex;
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataProvinsi.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                countryNameIdn: element.countryNameIdn,
+                countryId: element.countryId,
+                provinceId: element.provinceId,
+                provinceName: element.provinceName,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataProvinsi);
-          this.ngAfterViewInit();
-        },
-        (error) => {
-          console.log(error);
-          console.log(error.error.error);
-          let errorText = error.error.error;
-          Swal.fire({
-            position: 'center',
-            icon: 'error',
-            title: errorText,
-            showConfirmButton: true,
-          })
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataProvinsi);
+            this.ngAfterViewInit();
+          },
+          (error) => {
+            console.log(error);
+            console.log(error.error.error);
+            let errorText = error.error.error;
+            Swal.fire({
+              position: 'center',
+              icon: 'error',
+              title: errorText,
+              showConfirmButton: true,
+            });
+          }
+        );
     }
   }
 

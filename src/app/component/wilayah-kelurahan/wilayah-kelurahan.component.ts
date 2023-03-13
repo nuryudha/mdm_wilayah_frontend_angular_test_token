@@ -6,7 +6,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../wilayah.service';
+import { WilayahService } from '../../services/wilayah.service';
 
 @Component({
   selector: 'app-wilayah-kelurahan',
@@ -121,37 +121,39 @@ export class WilayahKelurahanComponent implements OnInit {
             '&size=' +
             this.pageSize
         )
-        .subscribe((res) => {
-          this.pageEvent = e;
-          this.pageSize = e.pageSize;
-          this.pageIndex = e.pageIndex;
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataKeluarahan.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              villageId: element.villageId,
-              villageName: element.villageName,
-              villagePostalCode: element.villagePostalCode,
-              districtName: element.districtName,
-              cityName: element.cityName,
-              provinceName: element.provinceName,
-              countryNameIdn: element.countryNameIdn,
+        .subscribe(
+          (res) => {
+            this.pageEvent = e;
+            this.pageSize = e.pageSize;
+            this.pageIndex = e.pageIndex;
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataKeluarahan.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                villageId: element.villageId,
+                villageName: element.villageName,
+                villagePostalCode: element.villagePostalCode,
+                districtName: element.districtName,
+                cityName: element.cityName,
+                provinceName: element.provinceName,
+                countryNameIdn: element.countryNameIdn,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataKeluarahan);
-        },
-        (error) => {
-          console.log(error);
-          console.log(error.error.error);
-          let errorText = error.error.error;
-          Swal.fire({
-            position: 'center',
-            icon: 'error',
-            title: errorText,
-            showConfirmButton: true,
-          })
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataKeluarahan);
+          },
+          (error) => {
+            console.log(error);
+            console.log(error.error.error);
+            let errorText = error.error.error;
+            Swal.fire({
+              position: 'center',
+              icon: 'error',
+              title: errorText,
+              showConfirmButton: true,
+            });
+          }
+        );
     } else {
       this.dataSearchKeluarahan = [];
       this.wilayahService
@@ -175,27 +177,28 @@ export class WilayahKelurahanComponent implements OnInit {
             '&size=' +
             this.pageSize
         )
-        .subscribe((res) => {
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataSearchKeluarahan.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              villageId: element.villageId,
-              villageName: element.villageName,
-              villagePostalCode: element.villagePostalCode,
-              districtName: element.districtName,
-              cityName: element.cityName,
-              provinceName: element.provinceName,
-              countryNameIdn: element.countryNameIdn,
+        .subscribe(
+          (res) => {
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataSearchKeluarahan.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                villageId: element.villageId,
+                villageName: element.villageName,
+                villagePostalCode: element.villagePostalCode,
+                districtName: element.districtName,
+                cityName: element.cityName,
+                provinceName: element.provinceName,
+                countryNameIdn: element.countryNameIdn,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataSearchKeluarahan);
-        },
-        (error) => {
-          console.log(error);
-
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataSearchKeluarahan);
+          },
+          (error) => {
+            console.log(error);
+          }
+        );
     }
   }
 

@@ -9,7 +9,7 @@ import { Negara } from 'src/app/model/negaraModel';
 import { Provinsi } from 'src/app/model/provinsiModel';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../../wilayah.service';
+import { WilayahService } from '../../../services/wilayah.service';
 
 @Component({
   selector: 'app-edit-kecamatan',

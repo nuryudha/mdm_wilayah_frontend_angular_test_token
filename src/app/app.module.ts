@@ -1,6 +1,7 @@
 import { AlfabetOnlyDirective } from './directives/alfabet-only.directive';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
+import { AuthCheckComponent } from './component/auth-check/auth-check.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserModule } from '@angular/platform-browser';
 import { CreateKabupatenComponent } from './component/wilayah-kabupaten/create-kabupaten/create-kabupaten.component';
@@ -31,7 +32,9 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { NgModule } from '@angular/core';
 import { NumberOnlyDirective } from './directives/number-only.directive';
+import { PageNotFoundComponent } from './component/page-not-found/page-not-found.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { UnauthorizedComponent } from './component/unauthorized/unauthorized.component';
 import { WilayahKabupatenComponent } from './component/wilayah-kabupaten/wilayah-kabupaten.component';
 import { WilayahKecamatanComponent } from './component/wilayah-kecamatan/wilayah-kecamatan.component';
 import { WilayahKelurahanComponent } from './component/wilayah-kelurahan/wilayah-kelurahan.component';
@@ -61,6 +64,9 @@ import { WilayahProvinsiComponent } from './component/wilayah-provinsi/wilayah-p
     DataKabupatenComponent,
     DataKecamatanComponent,
     DataProvinsiComponent,
+    AuthCheckComponent,
+    UnauthorizedComponent,
+    PageNotFoundComponent,
   ],
   imports: [
     BrowserModule,

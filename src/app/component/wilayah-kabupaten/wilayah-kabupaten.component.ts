@@ -6,7 +6,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../wilayah.service';
+import { WilayahService } from '../../services/wilayah.service';
 
 @Component({
   selector: 'app-wilayah-kabupaten',
@@ -115,34 +115,36 @@ export class WilayahKabupatenComponent implements OnInit {
             '&size=' +
             this.pageSize
         )
-        .subscribe((res) => {
-          this.pageEvent = e;
-          this.pageSize = e.pageSize;
-          this.pageIndex = e.pageIndex;
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataKabupaten.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              cityId: element.cityId,
-              cityName: element.cityName,
-              provinceName: element.provinceName,
-              countryNameIdn: element.countryNameIdn,
+        .subscribe(
+          (res) => {
+            this.pageEvent = e;
+            this.pageSize = e.pageSize;
+            this.pageIndex = e.pageIndex;
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataKabupaten.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                cityId: element.cityId,
+                cityName: element.cityName,
+                provinceName: element.provinceName,
+                countryNameIdn: element.countryNameIdn,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataKabupaten);
-        },
-        (error) => {
-          console.log(error);
-          console.log(error.error.error);
-          let errorText = error.error.error;
-          Swal.fire({
-            position: 'center',
-            icon: 'error',
-            title: errorText,
-            showConfirmButton: true,
-          })
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataKabupaten);
+          },
+          (error) => {
+            console.log(error);
+            console.log(error.error.error);
+            let errorText = error.error.error;
+            Swal.fire({
+              position: 'center',
+              icon: 'error',
+              title: errorText,
+              showConfirmButton: true,
+            });
+          }
+        );
     } else {
       this.dataSearchKabupaten = [];
       this.wilayahService

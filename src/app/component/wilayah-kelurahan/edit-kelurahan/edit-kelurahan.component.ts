@@ -10,7 +10,7 @@ import { Negara } from 'src/app/model/negaraModel';
 import { Provinsi } from 'src/app/model/provinsiModel';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../../wilayah.service';
+import { WilayahService } from '../../../services/wilayah.service';
 
 @Component({
   selector: 'app-edit-kelurahan',
@@ -113,7 +113,7 @@ export class EditKelurahanComponent implements OnInit {
 
   getIdKelurahan() {
     this.wilayahService.getId('village/' + this.id).subscribe((res) => {
-      console.log(res)
+      console.log(res);
       this.namaKelurahan = res.body.result.villageName;
       this.kodePos = res.body.result.villagePostalCode;
       this.namaKecamatan = res.body.result.districtName;

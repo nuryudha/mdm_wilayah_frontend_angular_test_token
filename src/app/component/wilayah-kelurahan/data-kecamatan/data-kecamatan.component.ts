@@ -5,7 +5,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
-import { WilayahService } from '../../wilayah.service';
+import { WilayahService } from '../../../services/wilayah.service';
 
 @Component({
   selector: 'app-data-kecamatan',

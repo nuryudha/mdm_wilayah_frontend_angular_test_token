@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
-import { WilayahService } from '../../wilayah.service';
+import { WilayahService } from '../../../services/wilayah.service';
 
 @Component({
   selector: 'app-create-negara',
@@ -56,7 +56,7 @@ export class CreateNegaraComponent implements OnInit {
       });
       return;
     }
-  
+
     let parameter = {
       countryId: this.idNegara,
       countryNameIdn: this.namaNegara,
