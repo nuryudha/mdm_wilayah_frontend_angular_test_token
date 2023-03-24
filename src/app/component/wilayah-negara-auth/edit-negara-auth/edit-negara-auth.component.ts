@@ -9,11 +9,11 @@ import { WilayahService } from 'src/app/services/wilayah.service';
 import { catchError } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-auth-check',
-  templateUrl: './auth-check.component.html',
-  styleUrls: ['./auth-check.component.css'],
+  selector: 'app-edit-negara-auth',
+  templateUrl: './edit-negara-auth.component.html',
+  styleUrls: ['./edit-negara-auth.component.css'],
 })
-export class AuthCheckComponent implements OnInit {
+export class EditNegaraAuthComponent implements OnInit {
   constructor(
     private title: Title,
     private router: Router,
@@ -24,7 +24,7 @@ export class AuthCheckComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.title.setTitle('Auth Check');
+    this.title.setTitle('Edit Negara Auth');
     this.getUrlParameter();
   }
 
@@ -40,12 +40,15 @@ export class AuthCheckComponent implements OnInit {
     responseType: 'json',
   };
 
-  tokenParameter: string = '';
+  tokenParameter: any;
   urlParameter: any;
+  idParameter: any;
 
   getUrlParameter() {
     this.tokenParameter = this.route.snapshot.params['token'];
-
+    this.idParameter = this.route.snapshot.params['id'];
+    console.log(this.tokenParameter);
+    console.log(this.idParameter);
     this.httpOptions.headers = this.httpHeaders.set(
       'Authorization',
       `Bearer ${this.tokenParameter}`
@@ -70,6 +73,7 @@ export class AuthCheckComponent implements OnInit {
       )
       .subscribe((result) => {
         console.log(result);
+
         if (result.body.status === true) {
           const authLogin = {
             token: this.tokenParameter,
@@ -80,7 +84,7 @@ export class AuthCheckComponent implements OnInit {
           console.log('true', authLogin);
           localStorage.setItem('auth-user', JSON.stringify(authLogin));
           this.toggleLoading.showLoading(false);
-          this.router.navigate(['/wilayah-negara']);
+          this.router.navigate(['/edit-negara/' + this.idParameter]);
         } else {
           this.toggleLoading.showLoading(false);
           this.router.navigate(['/unauthorized']);

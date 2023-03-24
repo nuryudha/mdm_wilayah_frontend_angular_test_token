@@ -9,11 +9,11 @@ import { WilayahService } from 'src/app/services/wilayah.service';
 import { catchError } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-auth-check',
-  templateUrl: './auth-check.component.html',
-  styleUrls: ['./auth-check.component.css'],
+  selector: 'app-wilayah-negara-auth',
+  templateUrl: './wilayah-negara-auth.component.html',
+  styleUrls: ['./wilayah-negara-auth.component.css'],
 })
-export class AuthCheckComponent implements OnInit {
+export class WilayahNegaraAuthComponent implements OnInit {
   constructor(
     private title: Title,
     private router: Router,
@@ -24,7 +24,7 @@ export class AuthCheckComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.title.setTitle('Auth Check');
+    this.title.setTitle('Negara Auth Check');
     this.getUrlParameter();
   }
 
@@ -40,12 +40,12 @@ export class AuthCheckComponent implements OnInit {
     responseType: 'json',
   };
 
-  tokenParameter: string = '';
+  tokenParameter: any;
   urlParameter: any;
 
   getUrlParameter() {
     this.tokenParameter = this.route.snapshot.params['token'];
-
+    console.log(this.tokenParameter);
     this.httpOptions.headers = this.httpHeaders.set(
       'Authorization',
       `Bearer ${this.tokenParameter}`
@@ -70,6 +70,7 @@ export class AuthCheckComponent implements OnInit {
       )
       .subscribe((result) => {
         console.log(result);
+
         if (result.body.status === true) {
           const authLogin = {
             token: this.tokenParameter,

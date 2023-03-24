@@ -1,6 +1,8 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
+import { ErrorRequestService } from 'src/app/shared/handle-error/error-request.service';
+import { HttpHeaders } from '@angular/common/http';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -9,6 +11,7 @@ import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
 import { WilayahService } from '../../services/wilayah.service';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-wilayah-negara',
@@ -19,10 +22,30 @@ export class WilayahNegaraComponent implements OnInit {
   constructor(
     private wilayahService: WilayahService,
     private title: Title,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private handleError: ErrorRequestService
   ) {
-    this.nik = this.route.snapshot.paramMap.get('nik');
+    this.token = this.authUser.token;
   }
+
+  authUser: any = JSON.parse(localStorage.getItem('auth-user') || '{}');
+
+  ngOnInit(): void {
+    this.getCountry();
+    this.title.setTitle('Negara');
+  }
+
+  httpHeaders = new HttpHeaders({
+    'Content-Type': 'application/json',
+  });
+
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+    }),
+    observe: 'response',
+    responseType: 'json',
+  };
 
   displayedColumns: string[] = ['id', 'countryId', 'countryNameIdn', 'action'];
   dataSource!: MatTableDataSource<Negara>;
@@ -41,9 +64,15 @@ export class WilayahNegaraComponent implements OnInit {
   @ViewChild('paginator')
   paginator!: MatPaginator;
   @ViewChild('sort') sort!: MatSort;
-  nik: any;
+
+  token: any;
+  branchCode: any;
 
   getCountry() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.noData = false;
     this.isLoading = true;
     this.error = false;
@@ -51,11 +80,13 @@ export class WilayahNegaraComponent implements OnInit {
     this.dataNegara = [];
     this.dataSource = new MatTableDataSource(this.dataNegara);
     this.wilayahService
-      .getAll(
+      .getAllc(
         'country/?sort=countryNameIdn,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
       .subscribe(
         (res) => {
@@ -72,7 +103,7 @@ export class WilayahNegaraComponent implements OnInit {
           this.dataSource = new MatTableDataSource(this.dataNegara);
         },
         (error) => {
-          console.log(error);
+          // console.log(error);
           this.statusText = error.statusText;
           this.isLoading = false;
           this.error = true;
@@ -98,6 +129,7 @@ export class WilayahNegaraComponent implements OnInit {
 
   handlePageEvent(e: PageEvent) {
     this.noData = false;
+    this.error = false;
     this.isLoading = true;
     this.pageEvent = e;
     this.pageSize = e.pageSize;
@@ -110,12 +142,18 @@ export class WilayahNegaraComponent implements OnInit {
     this.dataSource = new MatTableDataSource(this.dataNegara);
 
     if (this.searchData == null) {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.wilayahService
-        .getAll(
+        .getAllc(
           'country/?sort=countryNameIdn,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
         .subscribe(
           (res) => {
@@ -136,21 +174,35 @@ export class WilayahNegaraComponent implements OnInit {
             this.dataSource = new MatTableDataSource(this.dataNegara);
           },
           (error) => {
-            console.log(error);
-            console.log(error.error.error);
-            let errorText = error.error.error;
-            Swal.fire({
-              position: 'center',
+            // console.log(error);
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
               icon: 'error',
-              title: errorText,
-              showConfirmButton: true,
+              title: 'Service Unavailable',
             });
           }
         );
     } else {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.dataSearchNegara = [];
       this.wilayahService
-        .getAll(
+        .getAllc(
           'country/?countryNameIdn.contains=' +
             this.searchData +
             '&countryId.contains=' +
@@ -158,9 +210,74 @@ export class WilayahNegaraComponent implements OnInit {
             '&sort=countryNameIdn,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
-        .subscribe((res) => {
+        .subscribe(
+          (res) => {
+            console.log(res);
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataSearchNegara.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                countryId: element.countryId,
+                countryNameIdn: element.countryNameIdn,
+              });
+            });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataSearchNegara);
+          },
+          (error) => {
+            // console.log(error);
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Service Unavailable',
+            });
+          }
+        );
+    }
+  }
+
+  searchNegara() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
+    this.noData = false;
+    this.error = false;
+    this.isLoading = true;
+    this.dataSearchNegara = [];
+    this.pageIndex = 0;
+    this.wilayahService
+      .getAllc(
+        'country/?countryNameIdn.contains=' +
+          this.searchData +
+          '&countryId.contains=' +
+          this.searchData +
+          '&sort=countryNameIdn,asc&page=' +
+          this.pageIndex +
+          '&size=' +
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
+      )
+      .subscribe(
+        (res) => {
           console.log(res);
           this.totalRec = res.body.paging.totalrecord;
           res.body.result.forEach((element: any, index: any) => {
@@ -171,42 +288,31 @@ export class WilayahNegaraComponent implements OnInit {
             });
           });
           this.isLoading = false;
-
+          this.noData = true;
           this.dataSource = new MatTableDataSource(this.dataSearchNegara);
-        });
-    }
-  }
+        },
+        (error) => {
+          // console.log(error);
+          this.isLoading = false;
+          this.error = true;
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
 
-  searchNegara() {
-    this.noData = false;
-    this.isLoading = true;
-    this.dataSearchNegara = [];
-    this.pageIndex = 0;
-    this.wilayahService
-      .getAll(
-        'country/?countryNameIdn.contains=' +
-          this.searchData +
-          '&countryId.contains=' +
-          this.searchData +
-          '&sort=countryNameIdn,asc&page=' +
-          this.pageIndex +
-          '&size=' +
-          this.pageSize
-      )
-      .subscribe((res) => {
-        console.log(res);
-        this.totalRec = res.body.paging.totalrecord;
-        res.body.result.forEach((element: any, index: any) => {
-          this.dataSearchNegara.push({
-            no: this.pageIndex * this.pageSize + index + 1 + '.',
-            countryId: element.countryId,
-            countryNameIdn: element.countryNameIdn,
+            didOpen: (toast) => {
+              toast.addEventListener('mouseenter', Swal.stopTimer);
+              toast.addEventListener('mouseleave', Swal.resumeTimer);
+            },
           });
-        });
-        this.isLoading = false;
-        this.noData = true;
-        this.dataSource = new MatTableDataSource(this.dataSearchNegara);
-      });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Service Unavailable',
+          });
+        }
+      );
   }
 
   onSearchChange() {
@@ -220,7 +326,6 @@ export class WilayahNegaraComponent implements OnInit {
   deleteNegara(dataCountry: any) {
     this.noData = false;
     let idCountry = dataCountry.countryId;
-    let nik = this.nik;
     console.log(idCountry);
     Swal.fire({
       title: 'Apakah kamu yakin?',
@@ -233,49 +338,52 @@ export class WilayahNegaraComponent implements OnInit {
       cancelButtonText: 'Tidak',
     }).then((result) => {
       if (result.isConfirmed) {
-        this.wilayahService.deleteAll('country/' + idCountry).subscribe(
-          (res) => {
-            console.log(res);
-            let statusCode = res.body.status.responseCode;
-            let statusDesc = res.body.status.responseDesc;
-            if (statusCode == '200') {
-              Swal.fire({
-                position: 'center',
-                icon: 'success',
-                title: statusDesc,
-                showConfirmButton: false,
-                timer: 1500,
-              }).then((res) => {
-                if (res) this.getCountry();
-              });
-            } else {
+        this.httpOptions.headers = this.httpHeaders.set(
+          'Authorization',
+          `Bearer ${this.token}`
+        );
+        this.wilayahService
+          .deleteAllc(
+            'country/' + idCountry,
+            this.httpOptions,
+            catchError(this.handleError.handleErrorDetailUser.bind(this))
+          )
+          .subscribe(
+            (res) => {
+              console.log(res);
+              let statusCode = res.body.status.responseCode;
+              let statusDesc = res.body.status.responseDesc;
+              if (statusCode == '200') {
+                Swal.fire({
+                  position: 'center',
+                  icon: 'success',
+                  title: statusDesc,
+                  showConfirmButton: false,
+                  timer: 1500,
+                }).then((res) => {
+                  if (res) this.getCountry();
+                });
+              } else {
+                Swal.fire({
+                  position: 'center',
+                  icon: 'error',
+                  title: statusDesc,
+                  showConfirmButton: false,
+                  timer: 1500,
+                });
+              }
+            },
+            (error) => {
               Swal.fire({
                 position: 'center',
                 icon: 'error',
-                title: statusDesc,
+                title: 'Service Unavailable',
                 showConfirmButton: false,
                 timer: 1500,
               });
             }
-          },
-          (error) => {
-            Swal.fire({
-              position: 'center',
-              icon: 'error',
-              title: 'Service Unavailable',
-              showConfirmButton: false,
-              timer: 1500,
-            });
-          }
-        );
+          );
       }
     });
-  }
-
-  ngOnInit(): void {
-    this.getCountry();
-    this.nik = this.route.snapshot.paramMap.get('nik');
-    console.log(this.nik);
-    this.title.setTitle('Negara');
   }
 }

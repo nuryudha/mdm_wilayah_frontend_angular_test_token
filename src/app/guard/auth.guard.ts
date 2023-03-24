@@ -13,7 +13,7 @@ import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root',
 })
-export class GuardGuard implements CanActivate {
+export class AuthGuard implements CanActivate {
   constructor(private auth: AuthService, private router: Router) {}
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -22,6 +22,7 @@ export class GuardGuard implements CanActivate {
     if (!this.auth.isLoggedIn()) {
       this.router.navigate(['/unauthorized']);
     }
+    console.log('======> cek', this.auth.isLoggedIn());
     return this.auth.isLoggedIn();
   }
 }

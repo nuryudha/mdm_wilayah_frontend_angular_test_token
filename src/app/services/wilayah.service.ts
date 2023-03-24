@@ -17,6 +17,16 @@ const httpOptions: Object = {
 export class WilayahService {
   constructor(private http: HttpClient) {}
 
+  detailUser(
+    endPoint: string,
+    httpHeaders: any,
+    catchError: any
+  ): Observable<HttpResponse<any>> {
+    return this.http
+      .get<any>(environment.detailUser + endPoint, httpHeaders)
+      .pipe(catchError);
+  }
+
   getAll(endpoint: string): Observable<HttpResponse<any>> {
     return this.http
       .get<any>(environment.wilayah + endpoint, httpOptions)
@@ -45,5 +55,54 @@ export class WilayahService {
     return this.http
       .put<any>(environment.wilayah + endpoint, parameter, httpOptions)
       .pipe();
+  }
+
+  // ! DUMMY SERVICE
+  getAllc(
+    endpoint: string,
+    httpHeaders: any,
+    catchError: any
+  ): Observable<HttpResponse<any>> {
+    return this.http
+      .get<any>(environment.wilayah + endpoint, httpHeaders)
+      .pipe(catchError);
+  }
+  putIdc(
+    endpoint: string,
+    parameter: any,
+    httpHeaders: any,
+    catchError: any
+  ): Observable<HttpResponse<any>> {
+    return this.http
+      .put<any>(environment.wilayah + endpoint, parameter, httpHeaders)
+      .pipe(catchError);
+  }
+  postAllc(
+    endpoint: string,
+    parameter: any,
+    httpHeaders: any,
+    catchError: any
+  ): Observable<HttpResponse<any>> {
+    return this.http
+      .post<any>(environment.wilayah + endpoint, parameter, httpHeaders)
+      .pipe(catchError);
+  }
+  deleteAllc(
+    endpoint: string,
+    httpHeaders: any,
+    catchError: any
+  ): Observable<HttpResponse<any>> {
+    return this.http
+      .delete<any>(environment.wilayah + endpoint, httpHeaders)
+      .pipe(catchError);
+  }
+  getIdc(
+    endpoint: string,
+    httpHeaders: any,
+    catchError: any
+  ): Observable<HttpResponse<any>> {
+    return this.http
+      .get<any>(environment.wilayah + endpoint, httpHeaders)
+      .pipe(catchError);
   }
 }

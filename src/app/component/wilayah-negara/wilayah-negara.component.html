@@ -2,7 +2,7 @@
   <div class="d-flex flex-row-reverse mt-3">
     <button
       mat-raised-button
-      routerLink="/create-negara/{{ nik }}"
+      routerLink="/create-negara-auth/{{token}}"
       color="primary"
       style="height: 50px; font-size: 18px"
     >
@@ -115,9 +115,7 @@
                     <button
                       mat-icon-button
                       color="primary"
-                      routerLink="/edit-negara/{{ element.countryId }}/{{
-                        nik
-                      }}"
+                      routerLink="/edit-negara-auth/{{ element.countryId }}/{{token}}"
                     >
                       <mat-icon>edit</mat-icon>
                     </button>

@@ -1,6 +1,8 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
+import { ErrorRequestService } from 'src/app/shared/handle-error/error-request.service';
+import { HttpHeaders } from '@angular/common/http';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -10,6 +12,7 @@ import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
 import { WilayahService } from '../../services/wilayah.service';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-wilayah-provinsi',
@@ -21,10 +24,31 @@ export class WilayahProvinsiComponent implements OnInit {
     private wilayahService: WilayahService,
     private router: Router,
     private route: ActivatedRoute,
-    private title: Title
+    private title: Title,
+    private handleError: ErrorRequestService
   ) {
-    this.nik = this.route.snapshot.paramMap.get('nik');
+    this.token = this.authUser.token;
   }
+
+  authUser: any = JSON.parse(localStorage.getItem('auth-user') || '{}');
+
+  ngOnInit(): void {
+    this.getProvince();
+    console.log(this.nik);
+    this.title.setTitle('Provinsi');
+  }
+
+  httpHeaders = new HttpHeaders({
+    'Content-Type': 'application/json',
+  });
+
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+    }),
+    observe: 'response',
+    responseType: 'json',
+  };
 
   displayedColumns = [
     'id',
@@ -47,17 +71,13 @@ export class WilayahProvinsiComponent implements OnInit {
   statusText: any;
   noData = false;
   nik: any;
+  token: any;
 
   @ViewChild('paginator')
   paginator!: MatPaginator;
 
   @ViewChild('sort')
   sort!: MatSort;
-
-  ngAfterViewInit() {
-    this.dataSource.sort = this.sort;
-    // this.dataSource.paginator = this.paginator;
-  }
 
   getProvince() {
     this.noData = false;
@@ -114,8 +134,9 @@ export class WilayahProvinsiComponent implements OnInit {
   }
 
   handlePageEvent(e: PageEvent) {
-    this.isLoading = true;
     this.noData = false;
+    this.error = false;
+    this.isLoading = true;
     this.pageEvent = e;
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
@@ -138,21 +159,43 @@ export class WilayahProvinsiComponent implements OnInit {
             '&size=' +
             this.pageSize
         )
-        .subscribe((res) => {
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataSearchProvinsi.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              countryId: element.countryId,
-              countryNameIdn: element.countryNameIdn,
-              provinceId: element.provinceId,
-              provinceName: element.provinceName,
+        .subscribe(
+          (res) => {
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataSearchProvinsi.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                countryId: element.countryId,
+                countryNameIdn: element.countryNameIdn,
+                provinceId: element.provinceId,
+                provinceName: element.provinceName,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
-          this.ngAfterViewInit();
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
+          },
+          (error) => {
+            console.log(error);
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Service Unavailable',
+            });
+          }
+        );
     } else {
       this.wilayahService
         .getAll(
@@ -178,17 +221,26 @@ export class WilayahProvinsiComponent implements OnInit {
             });
             this.isLoading = false;
             this.dataSource = new MatTableDataSource(this.dataProvinsi);
-            this.ngAfterViewInit();
           },
           (error) => {
             console.log(error);
-            console.log(error.error.error);
-            let errorText = error.error.error;
-            Swal.fire({
-              position: 'center',
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
               icon: 'error',
-              title: errorText,
-              showConfirmButton: true,
+              title: 'Service Unavailable',
             });
           }
         );
@@ -197,6 +249,7 @@ export class WilayahProvinsiComponent implements OnInit {
 
   searchProvinsi() {
     this.noData = false;
+    this.error = false;
     this.isLoading = true;
     this.pageIndex = 0;
     this.dataSearchProvinsi = [];
@@ -213,22 +266,44 @@ export class WilayahProvinsiComponent implements OnInit {
           '&size=' +
           this.pageSize
       )
-      .subscribe((res) => {
-        this.totalRec = res.body.paging.totalrecord;
-        res.body.result.forEach((element: any, index: any) => {
-          this.dataSearchProvinsi.push({
-            no: this.pageIndex * this.pageSize + index + 1 + '.',
-            countryNameIdn: element.countryNameIdn,
-            countryId: element.countryId,
-            provinceId: element.provinceId,
-            provinceName: element.provinceName,
+      .subscribe(
+        (res) => {
+          this.totalRec = res.body.paging.totalrecord;
+          res.body.result.forEach((element: any, index: any) => {
+            this.dataSearchProvinsi.push({
+              no: this.pageIndex * this.pageSize + index + 1 + '.',
+              countryNameIdn: element.countryNameIdn,
+              countryId: element.countryId,
+              provinceId: element.provinceId,
+              provinceName: element.provinceName,
+            });
           });
-        });
-        this.isLoading = false;
-        this.noData = true;
-        this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
-        this.ngAfterViewInit();
-      });
+          this.isLoading = false;
+          this.noData = true;
+          this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
+        },
+        (error) => {
+          console.log(error);
+          this.isLoading = false;
+          this.error = true;
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+
+            didOpen: (toast) => {
+              toast.addEventListener('mouseenter', Swal.stopTimer);
+              toast.addEventListener('mouseleave', Swal.resumeTimer);
+            },
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Service Unavailable',
+          });
+        }
+      );
   }
 
   onSearchChange() {
@@ -293,12 +368,5 @@ export class WilayahProvinsiComponent implements OnInit {
           );
       }
     });
-  }
-
-  ngOnInit(): void {
-    this.getProvince();
-    this.nik = this.route.snapshot.paramMap.get('nik');
-    console.log(this.nik);
-    this.title.setTitle('Provinsi');
   }
 }
