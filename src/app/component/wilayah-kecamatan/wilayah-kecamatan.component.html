@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <div class="d-flex flex-row-reverse mt-3">
-    <button mat-raised-button routerLink="/create-kecamatan/{{ nik }}" color="primary"
+    <button mat-raised-button routerLink="/create-kecamatan-auth/{{ token }}" color="primary"
       style="height: 50px; font-size: 18px">
       <mat-icon>add</mat-icon>
       Create New
@@ -103,8 +103,8 @@
                     Action
                   </th>
                   <td mat-cell *matCellDef="let element">
-                    <button mat-icon-button color="primary" routerLink="/edit-kecamatan/{{ element.districtId }}/{{
-                        nik
+                    <button mat-icon-button color="primary" routerLink="/edit-kecamatan-auth/{{ element.districtId }}/{{
+                        token
                       }}">
                       <mat-icon>edit</mat-icon>
                     </button>

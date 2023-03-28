@@ -50,6 +50,14 @@ import { WilayahNegaraAuthComponent } from './component/wilayah-negara-auth/wila
 import { WilayahNegaraComponent } from './component/wilayah-negara/wilayah-negara.component';
 import { WilayahProvinsiAuthComponent } from './component/wilayah-provinsi-auth/wilayah-provinsi-auth.component';
 import { WilayahProvinsiComponent } from './component/wilayah-provinsi/wilayah-provinsi.component';
+import { CreateProvinsiAuthComponent } from './component/wilayah-provinsi-auth/create-provinsi-auth/create-provinsi-auth.component';
+import { EditProvinsiAuthComponent } from './component/wilayah-provinsi-auth/edit-provinsi-auth/edit-provinsi-auth.component';
+import { CreateKabupatenAuthComponent } from './component/wilayah-kabupaten-auth/create-kabupaten-auth/create-kabupaten-auth.component';
+import { EditKabupatenAuthComponent } from './component/wilayah-kabupaten-auth/edit-kabupaten-auth/edit-kabupaten-auth.component';
+import { CreateKecamatanAuthComponent } from './component/wilayah-kecamatan-auth/create-kecamatan-auth/create-kecamatan-auth.component';
+import { EditKecamatanAuthComponent } from './component/wilayah-kecamatan-auth/edit-kecamatan-auth/edit-kecamatan-auth.component';
+import { EditKelurahanAuthComponent } from './component/wilayah-kelurahan-auth/edit-kelurahan-auth/edit-kelurahan-auth.component';
+import { CreateKelurahanAuthComponent } from './component/wilayah-kelurahan-auth/create-kelurahan-auth/create-kelurahan-auth.component';
 
 @NgModule({
   declarations: [
@@ -84,6 +92,14 @@ import { WilayahProvinsiComponent } from './component/wilayah-provinsi/wilayah-p
     WilayahKabupatenAuthComponent,
     WilayahKecamatanAuthComponent,
     WilayahKelurahanAuthComponent,
+    CreateProvinsiAuthComponent,
+    EditProvinsiAuthComponent,
+    CreateKabupatenAuthComponent,
+    EditKabupatenAuthComponent,
+    CreateKecamatanAuthComponent,
+    EditKecamatanAuthComponent,
+    EditKelurahanAuthComponent,
+    CreateKelurahanAuthComponent,
   ],
   imports: [
     BrowserModule,

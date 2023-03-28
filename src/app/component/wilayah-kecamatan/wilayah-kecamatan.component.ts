@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
+import { ErrorRequestService } from 'src/app/shared/handle-error/error-request.service';
+import { HttpHeaders } from '@angular/common/http';
 import { Kecamatan } from 'src/app/model/kecamatanModel';
 import { MatTableDataSource } from '@angular/material/table';
 import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
 import { WilayahService } from '../../services/wilayah.service';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-wilayah-kecamatan',
@@ -17,10 +20,32 @@ export class WilayahKecamatanComponent implements OnInit {
   constructor(
     private wilayahService: WilayahService,
     private title: Title,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private handleError: ErrorRequestService
   ) {
-    this.nik = this.route.snapshot.paramMap.get('nik');
+    this.token = this.authUser.token;
+    this.nik = this.authUser.profileHeader.nik;
   }
+
+  authUser: any = JSON.parse(localStorage.getItem('auth-user') || '{}');
+
+  ngOnInit(): void {
+    this.getKecamatan();
+    console.log(this.nik);
+    this.title.setTitle('Kecamatan');
+  }
+
+  httpHeaders = new HttpHeaders({
+    'Content-Type': 'application/json',
+  });
+
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+    }),
+    observe: 'response',
+    responseType: 'json',
+  };
 
   displayedColumns = [
     'no',
@@ -45,19 +70,26 @@ export class WilayahKecamatanComponent implements OnInit {
   statusText: any;
   noData = false;
   nik: any;
+  token: any;
 
   getKecamatan() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.noData = false;
     this.isLoading = true;
     this.error = false;
     this.dataKecamatan = [];
     this.dataSource = new MatTableDataSource(this.dataKecamatan);
     this.wilayahService
-      .getAll(
+      .getAllc(
         'district/?sort=districtName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
       .subscribe(
         (res) => {
@@ -102,20 +134,27 @@ export class WilayahKecamatanComponent implements OnInit {
   }
 
   handlePageEvent(e: PageEvent) {
-    this.isLoading = true;
     this.noData = false;
+    this.error = false;
+    this.isLoading = true;
     this.pageEvent = e;
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
     // * getKecamatan
     this.dataKecamatan = [];
     if (this.searchData == null) {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.wilayahService
-        .getAll(
+        .getAllc(
           'district/?sort=districtName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
         .subscribe(
           (res) => {
@@ -137,21 +176,34 @@ export class WilayahKecamatanComponent implements OnInit {
             this.dataSource = new MatTableDataSource(this.dataKecamatan);
           },
           (error) => {
-            console.log(error);
-            console.log(error.error.error);
-            let errorText = error.error.error;
-            Swal.fire({
-              position: 'center',
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
               icon: 'error',
-              title: errorText,
-              showConfirmButton: true,
+              title: 'Service Unavailable',
             });
           }
         );
     } else {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.dataSearchKecamatan = [];
       this.wilayahService
-        .getAll(
+        .getAllc(
           'district/?districtId.contains=' +
             this.searchData +
             '&districtName.contains=' +
@@ -165,33 +217,63 @@ export class WilayahKecamatanComponent implements OnInit {
             '&sort=districtName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
-        .subscribe((res) => {
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataSearchKecamatan.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              districtId: element.districtId,
-              districtName: element.districtName,
-              cityName: element.cityName,
-              provinceName: element.provinceName,
-              countryNameIdn: element.countryNameIdn,
+        .subscribe(
+          (res) => {
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataSearchKecamatan.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                districtId: element.districtId,
+                districtName: element.districtName,
+                cityName: element.cityName,
+                provinceName: element.provinceName,
+                countryNameIdn: element.countryNameIdn,
+              });
             });
-          });
 
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataSearchKecamatan);
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataSearchKecamatan);
+          },
+          (error) => {
+            // console.log(error);
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Service Unavailable',
+            });
+          }
+        );
     }
   }
   searchKecamatan() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.noData = false;
+    this.error = false;
     this.isLoading = true;
     this.pageIndex = 0;
     this.dataSearchKecamatan = [];
     this.wilayahService
-      .getAll(
+      .getAllc(
         'district/?districtId.contains=' +
           this.searchData +
           '&districtName.contains=' +
@@ -205,24 +287,49 @@ export class WilayahKecamatanComponent implements OnInit {
           '&sort=districtName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
-      .subscribe((res) => {
-        this.totalRec = res.body.paging.totalrecord;
-        res.body.result.forEach((element: any, index: any) => {
-          this.dataSearchKecamatan.push({
-            no: this.pageIndex * this.pageSize + index + 1 + '.',
-            districtId: element.districtId,
-            districtName: element.districtName,
-            cityName: element.cityName,
-            provinceName: element.provinceName,
-            countryNameIdn: element.countryNameIdn,
+      .subscribe(
+        (res) => {
+          this.totalRec = res.body.paging.totalrecord;
+          res.body.result.forEach((element: any, index: any) => {
+            this.dataSearchKecamatan.push({
+              no: this.pageIndex * this.pageSize + index + 1 + '.',
+              districtId: element.districtId,
+              districtName: element.districtName,
+              cityName: element.cityName,
+              provinceName: element.provinceName,
+              countryNameIdn: element.countryNameIdn,
+            });
           });
-        });
-        this.isLoading = false;
-        this.noData = true;
-        this.dataSource = new MatTableDataSource(this.dataSearchKecamatan);
-      });
+          this.isLoading = false;
+          this.noData = true;
+          this.dataSource = new MatTableDataSource(this.dataSearchKecamatan);
+        },
+        (error) => {
+          // console.log(error);
+          this.isLoading = false;
+          this.error = true;
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+
+            didOpen: (toast) => {
+              toast.addEventListener('mouseenter', Swal.stopTimer);
+              toast.addEventListener('mouseleave', Swal.resumeTimer);
+            },
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Service Unavailable',
+          });
+        }
+      );
   }
 
   onSearchChange() {
@@ -234,6 +341,10 @@ export class WilayahKecamatanComponent implements OnInit {
   }
 
   deleteKecamatan(dataKecamatan: any) {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     let kecamatanId = dataKecamatan.districtId;
     let nik = this.nik;
     console.log(kecamatanId);
@@ -249,7 +360,11 @@ export class WilayahKecamatanComponent implements OnInit {
     }).then((res) => {
       if (res.isConfirmed) {
         this.wilayahService
-          .deleteAll('district/' + kecamatanId + '/' + nik)
+          .deleteAllc(
+            'district/' + kecamatanId + '/' + nik,
+            this.httpOptions,
+            catchError(this.handleError.handleErrorDetailUser.bind(this))
+          )
           .subscribe(
             (res) => {
               let statusCode = res.body.status.responseCode;
@@ -285,12 +400,5 @@ export class WilayahKecamatanComponent implements OnInit {
           );
       }
     });
-  }
-
-  ngOnInit(): void {
-    this.getKecamatan();
-    this.nik = this.route.snapshot.paramMap.get('nik');
-    console.log(this.nik);
-    this.title.setTitle('Kecamatan');
   }
 }

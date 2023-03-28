@@ -1,8 +1,8 @@
-<div class="container-fluid">
+       <div class="container-fluid">
   <div class="d-flex flex-row-reverse mt-3">
     <button
       mat-raised-button
-      routerLink="/create-kelurahan/{{ nik }}"
+      routerLink="/create-kelurahan-auth/{{ token }}"
       color="primary"
       style="height: 50px; font-size: 18px"
     >
@@ -191,8 +191,8 @@
                     <button
                       mat-icon-button
                       color="primary"
-                      routerLink="/edit-kelurahan/{{ element.villageId }}/{{
-                        nik
+                      routerLink="/edit-kelurahan-auth/{{ element.villageId }}/{{
+                        token
                       }}"
                     >
                       <mat-icon>edit</mat-icon>

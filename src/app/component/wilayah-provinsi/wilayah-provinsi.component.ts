@@ -28,6 +28,7 @@ export class WilayahProvinsiComponent implements OnInit {
     private handleError: ErrorRequestService
   ) {
     this.token = this.authUser.token;
+    this.nik = this.authUser.profileHeader.nik;
   }
 
   authUser: any = JSON.parse(localStorage.getItem('auth-user') || '{}');
@@ -71,6 +72,7 @@ export class WilayahProvinsiComponent implements OnInit {
   statusText: any;
   noData = false;
   nik: any;
+
   token: any;
 
   @ViewChild('paginator')
@@ -80,17 +82,23 @@ export class WilayahProvinsiComponent implements OnInit {
   sort!: MatSort;
 
   getProvince() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.noData = false;
     this.isLoading = true;
     this.error = false;
     this.dataProvinsi = [];
     this.dataSource = new MatTableDataSource(this.dataProvinsi);
     this.wilayahService
-      .getAll(
+      .getAllc(
         'province/?sort=provinceName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
       .subscribe(
         (res) => {
@@ -145,9 +153,13 @@ export class WilayahProvinsiComponent implements OnInit {
     this.dataProvinsi = [];
     this.dataSource = new MatTableDataSource(this.dataProvinsi);
     if (this.searchData != null) {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.dataSearchProvinsi = [];
       this.wilayahService
-        .getAll(
+        .getAllc(
           'province/??provinceId.contains=' +
             this.searchData +
             '&provinceName.contains=' +
@@ -157,7 +169,9 @@ export class WilayahProvinsiComponent implements OnInit {
             '&sort=provinceName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
         .subscribe(
           (res) => {
@@ -197,12 +211,18 @@ export class WilayahProvinsiComponent implements OnInit {
           }
         );
     } else {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.wilayahService
-        .getAll(
+        .getAllc(
           'province/?sort=provinceName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
         .subscribe(
           (res) => {
@@ -248,13 +268,17 @@ export class WilayahProvinsiComponent implements OnInit {
   }
 
   searchProvinsi() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.noData = false;
     this.error = false;
     this.isLoading = true;
     this.pageIndex = 0;
     this.dataSearchProvinsi = [];
     this.wilayahService
-      .getAll(
+      .getAllc(
         'province/??provinceId.contains=' +
           this.searchData +
           '&provinceName.contains=' +
@@ -264,7 +288,9 @@ export class WilayahProvinsiComponent implements OnInit {
           '&sort=provinceName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
       .subscribe(
         (res) => {
@@ -330,8 +356,16 @@ export class WilayahProvinsiComponent implements OnInit {
       cancelButtonText: 'Tidak',
     }).then((res) => {
       if (res.isConfirmed) {
+        this.httpOptions.headers = this.httpHeaders.set(
+          'Authorization',
+          `Bearer ${this.token}`
+        );
         this.wilayahService
-          .deleteAll('province/' + provinceId + '/' + nik)
+          .deleteAllc(
+            'province/' + provinceId + '/' + nik,
+            this.httpOptions,
+            catchError(this.handleError.handleErrorDetailUser.bind(this))
+          )
           .subscribe(
             (res) => {
               let statusCode = res.body.status.responseCode;

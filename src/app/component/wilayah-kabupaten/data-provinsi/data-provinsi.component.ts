@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 
 import { DataProvinsi } from 'src/app/model/provinsiModel';
+import { ErrorRequestService } from 'src/app/shared/handle-error/error-request.service';
+import { HttpHeaders } from '@angular/common/http';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { WilayahService } from '../../../services/wilayah.service';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-data-provinsi',
@@ -15,8 +18,30 @@ import { WilayahService } from '../../../services/wilayah.service';
 export class DataProvinsiComponent implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<DataProvinsiComponent>,
-    private wilayahService: WilayahService
-  ) {}
+    private wilayahService: WilayahService,
+    private handleError: ErrorRequestService
+  ) {
+    this.token = this.authUser.token;
+    this.nik = this.authUser.profileHeader.nik;
+  }
+
+  ngOnInit(): void {
+    this.getProvince();
+  }
+
+  authUser: any = JSON.parse(localStorage.getItem('auth-user') || '{}');
+
+  httpHeaders = new HttpHeaders({
+    'Content-Type': 'application/json',
+  });
+
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+    }),
+    observe: 'response',
+    responseType: 'json',
+  };
 
   displayedColumns = ['provinceId', 'provinceName', 'countryNameIdn'];
   totalRec: any;
@@ -32,19 +57,27 @@ export class DataProvinsiComponent implements OnInit {
   error = false;
   statusText: any;
   noData = false;
+  token: any;
+  nik: any;
 
   getProvince() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.noData = false;
     this.isLoading = true;
     this.error = false;
     this.dataProvinsi = [];
     this.dataSource = new MatTableDataSource(this.dataProvinsi);
     this.wilayahService
-      .getAll(
+      .getAllc(
         'province/?sort=provinceName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
       .subscribe(
         (res) => {
@@ -88,8 +121,9 @@ export class DataProvinsiComponent implements OnInit {
   }
 
   handlePageEvent(e: PageEvent) {
-    this.isLoading = true;
     this.noData = false;
+    this.error = false;
+    this.isLoading = true;
     this.pageEvent = e;
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
@@ -97,9 +131,13 @@ export class DataProvinsiComponent implements OnInit {
     this.dataProvinsi = [];
     this.dataSource = new MatTableDataSource(this.dataProvinsi);
     if (this.searchData != null) {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.dataSearchProvinsi = [];
       this.wilayahService
-        .getAll(
+        .getAllc(
           'province/??provinceId.contains=' +
             this.searchData +
             '&provinceName.contains=' +
@@ -109,57 +147,114 @@ export class DataProvinsiComponent implements OnInit {
             '&sort=provinceName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
-        .subscribe((res) => {
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataSearchProvinsi.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              countryId: element.countryId,
-              countryNameIdn: element.countryNameIdn,
-              provinceId: element.provinceId,
-              provinceName: element.provinceName,
+        .subscribe(
+          (res) => {
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataSearchProvinsi.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                countryId: element.countryId,
+                countryNameIdn: element.countryNameIdn,
+                provinceId: element.provinceId,
+                provinceName: element.provinceName,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
+          },
+          (error) => {
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Service Unavailable',
+            });
+          }
+        );
     } else {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.wilayahService
-        .getAll(
+        .getAllc(
           'province/?sort=provinceName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
-        .subscribe((res) => {
-          this.pageEvent = e;
-          this.pageSize = e.pageSize;
-          this.pageIndex = e.pageIndex;
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataProvinsi.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              countryNameIdn: element.countryNameIdn,
-              countryId: element.countryId,
-              provinceId: element.provinceId,
-              provinceName: element.provinceName,
+        .subscribe(
+          (res) => {
+            this.pageEvent = e;
+            this.pageSize = e.pageSize;
+            this.pageIndex = e.pageIndex;
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataProvinsi.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                countryNameIdn: element.countryNameIdn,
+                countryId: element.countryId,
+                provinceId: element.provinceId,
+                provinceName: element.provinceName,
+              });
             });
-          });
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataProvinsi);
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataProvinsi);
+          },
+          (error) => {
+            // console.log(error);
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Service Unavailable',
+            });
+          }
+        );
     }
   }
 
   searchProvinsi() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.isLoading = true;
     this.noData = false;
     this.pageIndex = 0;
     this.dataSearchProvinsi = [];
     this.wilayahService
-      .getAll(
+      .getAllc(
         'province/??provinceId.contains=' +
           this.searchData +
           '&provinceName.contains=' +
@@ -169,23 +264,48 @@ export class DataProvinsiComponent implements OnInit {
           '&sort=provinceName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
-      .subscribe((res) => {
-        this.totalRec = res.body.paging.totalrecord;
-        res.body.result.forEach((element: any, index: any) => {
-          this.dataSearchProvinsi.push({
-            no: this.pageIndex * this.pageSize + index + 1 + '.',
-            countryNameIdn: element.countryNameIdn,
-            countryId: element.countryId,
-            provinceId: element.provinceId,
-            provinceName: element.provinceName,
+      .subscribe(
+        (res) => {
+          this.totalRec = res.body.paging.totalrecord;
+          res.body.result.forEach((element: any, index: any) => {
+            this.dataSearchProvinsi.push({
+              no: this.pageIndex * this.pageSize + index + 1 + '.',
+              countryNameIdn: element.countryNameIdn,
+              countryId: element.countryId,
+              provinceId: element.provinceId,
+              provinceName: element.provinceName,
+            });
           });
-        });
-        this.isLoading = false;
-        this.noData = true;
-        this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
-      });
+          this.isLoading = false;
+          this.noData = true;
+          this.dataSource = new MatTableDataSource(this.dataSearchProvinsi);
+        },
+        (error) => {
+          // console.log(error);
+          this.isLoading = false;
+          this.error = true;
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+
+            didOpen: (toast) => {
+              toast.addEventListener('mouseenter', Swal.stopTimer);
+              toast.addEventListener('mouseleave', Swal.resumeTimer);
+            },
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Service Unavailable',
+          });
+        }
+      );
   }
 
   onSearchChange() {
@@ -198,8 +318,5 @@ export class DataProvinsiComponent implements OnInit {
 
   chooseCell(dataProvinsi: any) {
     this.dialogRef.close(dataProvinsi);
-  }
-  ngOnInit(): void {
-    this.getProvince();
   }
 }

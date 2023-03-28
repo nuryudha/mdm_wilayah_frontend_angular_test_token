@@ -66,7 +66,6 @@ export class WilayahNegaraComponent implements OnInit {
   @ViewChild('sort') sort!: MatSort;
 
   token: any;
-  branchCode: any;
 
   getCountry() {
     this.httpOptions.headers = this.httpHeaders.set(

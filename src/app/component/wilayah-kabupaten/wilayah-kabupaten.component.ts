@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
+import { ErrorRequestService } from 'src/app/shared/handle-error/error-request.service';
+import { HttpHeaders } from '@angular/common/http';
 import { Kabupaten } from 'src/app/model/kabupatenModel';
 import { MatTableDataSource } from '@angular/material/table';
 import { PageEvent } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { Title } from '@angular/platform-browser';
 import { WilayahService } from '../../services/wilayah.service';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-wilayah-kabupaten',
@@ -17,10 +20,32 @@ export class WilayahKabupatenComponent implements OnInit {
   constructor(
     private wilayahService: WilayahService,
     private title: Title,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private handleError: ErrorRequestService
   ) {
-    this.nik = this.route.snapshot.paramMap.get('nik');
+    this.token = this.authUser.token;
+    this.nik = this.authUser.profileHeader.nik;
   }
+
+  authUser: any = JSON.parse(localStorage.getItem('auth-user') || '{}');
+
+  ngOnInit(): void {
+    this.getKabupaten();
+    console.log(this.nik);
+    this.title.setTitle('Kabupaten');
+  }
+
+  httpHeaders = new HttpHeaders({
+    'Content-Type': 'application/json',
+  });
+
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+    }),
+    observe: 'response',
+    responseType: 'json',
+  };
 
   displayedColumns = [
     'no',
@@ -44,18 +69,26 @@ export class WilayahKabupatenComponent implements OnInit {
   statusText: any;
   noData = false;
   nik: any;
+  token: any;
 
   getKabupaten() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
+    this.noData = false;
     this.isLoading = true;
     this.error = false;
     this.dataKabupaten = [];
     this.dataSource = new MatTableDataSource(this.dataKabupaten);
     this.wilayahService
-      .getAll(
+      .getAllc(
         'city/?sort=cityName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
       .subscribe(
         (res) => {
@@ -99,21 +132,31 @@ export class WilayahKabupatenComponent implements OnInit {
   }
 
   handlePageEvent(e: PageEvent) {
-    this.isLoading = true;
     this.noData = false;
+    this.error = false;
+    this.isLoading = true;
     this.pageEvent = e;
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
     console.log(this.pageEvent);
+
     // * getKabupaten
     this.dataKabupaten = [];
+    this.dataSource = new MatTableDataSource(this.dataKabupaten);
+
     if (this.searchData == null) {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.wilayahService
-        .getAll(
+        .getAllc(
           'city/?sort=cityName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
         .subscribe(
           (res) => {
@@ -134,21 +177,35 @@ export class WilayahKabupatenComponent implements OnInit {
             this.dataSource = new MatTableDataSource(this.dataKabupaten);
           },
           (error) => {
-            console.log(error);
-            console.log(error.error.error);
-            let errorText = error.error.error;
-            Swal.fire({
-              position: 'center',
+            // console.log(error);
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
               icon: 'error',
-              title: errorText,
-              showConfirmButton: true,
+              title: 'Service Unavailable',
             });
           }
         );
     } else {
+      this.httpOptions.headers = this.httpHeaders.set(
+        'Authorization',
+        `Bearer ${this.token}`
+      );
       this.dataSearchKabupaten = [];
       this.wilayahService
-        .getAll(
+        .getAllc(
           'city/?cityId.contains=' +
             this.searchData +
             '&cityName.contains=' +
@@ -160,33 +217,63 @@ export class WilayahKabupatenComponent implements OnInit {
             '&sort=cityName,asc&page=' +
             this.pageIndex +
             '&size=' +
-            this.pageSize
+            this.pageSize,
+          this.httpOptions,
+          catchError(this.handleError.handleErrorDetailUser.bind(this))
         )
-        .subscribe((res) => {
-          this.totalRec = res.body.paging.totalrecord;
-          res.body.result.forEach((element: any, index: any) => {
-            this.dataSearchKabupaten.push({
-              no: this.pageIndex * this.pageSize + index + 1 + '.',
-              cityId: element.cityId,
-              cityName: element.cityName,
-              provinceName: element.provinceName,
-              countryNameIdn: element.countryNameIdn,
+        .subscribe(
+          (res) => {
+            this.totalRec = res.body.paging.totalrecord;
+            res.body.result.forEach((element: any, index: any) => {
+              this.dataSearchKabupaten.push({
+                no: this.pageIndex * this.pageSize + index + 1 + '.',
+                cityId: element.cityId,
+                cityName: element.cityName,
+                provinceName: element.provinceName,
+                countryNameIdn: element.countryNameIdn,
+              });
             });
-          });
 
-          this.isLoading = false;
-          this.dataSource = new MatTableDataSource(this.dataSearchKabupaten);
-        });
+            this.isLoading = false;
+            this.dataSource = new MatTableDataSource(this.dataSearchKabupaten);
+          },
+          (error) => {
+            // console.log(error);
+            this.isLoading = false;
+            this.error = true;
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+              },
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Service Unavailable',
+            });
+          }
+        );
     }
   }
 
   searchKabupaten() {
+    this.httpOptions.headers = this.httpHeaders.set(
+      'Authorization',
+      `Bearer ${this.token}`
+    );
     this.noData = false;
+    this.error = false;
     this.isLoading = true;
     this.pageIndex = 0;
     this.dataSearchKabupaten = [];
     this.wilayahService
-      .getAll(
+      .getAllc(
         'city/?cityId.contains=' +
           this.searchData +
           '&cityName.contains=' +
@@ -198,23 +285,48 @@ export class WilayahKabupatenComponent implements OnInit {
           '&sort=cityName,asc&page=' +
           this.pageIndex +
           '&size=' +
-          this.pageSize
+          this.pageSize,
+        this.httpOptions,
+        catchError(this.handleError.handleErrorDetailUser.bind(this))
       )
-      .subscribe((res) => {
-        this.totalRec = res.body.paging.totalrecord;
-        res.body.result.forEach((element: any, index: any) => {
-          this.dataSearchKabupaten.push({
-            no: this.pageIndex * this.pageSize + index + 1 + '.',
-            cityId: element.cityId,
-            cityName: element.cityName,
-            provinceName: element.provinceName,
-            countryNameIdn: element.countryNameIdn,
+      .subscribe(
+        (res) => {
+          this.totalRec = res.body.paging.totalrecord;
+          res.body.result.forEach((element: any, index: any) => {
+            this.dataSearchKabupaten.push({
+              no: this.pageIndex * this.pageSize + index + 1 + '.',
+              cityId: element.cityId,
+              cityName: element.cityName,
+              provinceName: element.provinceName,
+              countryNameIdn: element.countryNameIdn,
+            });
           });
-        });
-        this.isLoading = false;
-        this.noData = true;
-        this.dataSource = new MatTableDataSource(this.dataSearchKabupaten);
-      });
+          this.isLoading = false;
+          this.noData = true;
+          this.dataSource = new MatTableDataSource(this.dataSearchKabupaten);
+        },
+        (error) => {
+          // console.log(error);
+          this.isLoading = false;
+          this.error = true;
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+
+            didOpen: (toast) => {
+              toast.addEventListener('mouseenter', Swal.stopTimer);
+              toast.addEventListener('mouseleave', Swal.resumeTimer);
+            },
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Service Unavailable',
+          });
+        }
+      );
   }
 
   onSearchChange() {
@@ -227,7 +339,7 @@ export class WilayahKabupatenComponent implements OnInit {
 
   deleteKabupaten(dataKabupaten: any) {
     let kabupatenId = dataKabupaten.cityId;
-    let nik = this.nik;
+    this.noData = false;
     console.log(kabupatenId);
     Swal.fire({
       title: 'Apakah kamu yakin?',
@@ -240,16 +352,26 @@ export class WilayahKabupatenComponent implements OnInit {
       cancelButtonText: 'Tidak',
     }).then((res) => {
       if (res.isConfirmed) {
+        this.httpOptions.headers = this.httpHeaders.set(
+          'Authorization',
+          `Bearer ${this.token}`
+        );
         this.wilayahService
-          .deleteAll('city/' + kabupatenId + '/' + nik)
+          .deleteAllc(
+            'city/' + kabupatenId,
+            this.httpOptions,
+            catchError(this.handleError.handleErrorDetailUser.bind(this))
+          )
           .subscribe(
             (res) => {
+              console.log(res);
               let statusCode = res.body.status.responseCode;
+              let statusDesc = res.body.status.responseDesc;
               if (statusCode == '200') {
                 Swal.fire({
                   position: 'center',
                   icon: 'success',
-                  title: 'Berhasil',
+                  title: statusDesc,
                   showConfirmButton: false,
                   timer: 1500,
                 }).then((res) => {
@@ -259,7 +381,7 @@ export class WilayahKabupatenComponent implements OnInit {
                 Swal.fire({
                   position: 'center',
                   icon: 'error',
-                  title: 'Gagal',
+                  title: statusDesc,
                   showConfirmButton: false,
                   timer: 1500,
                 });
@@ -277,12 +399,5 @@ export class WilayahKabupatenComponent implements OnInit {
           );
       }
     });
-  }
-
-  ngOnInit(): void {
-    this.getKabupaten();
-    this.nik = this.route.snapshot.paramMap.get('nik');
-    console.log(this.nik);
-    this.title.setTitle('Kabupaten');
   }
 }

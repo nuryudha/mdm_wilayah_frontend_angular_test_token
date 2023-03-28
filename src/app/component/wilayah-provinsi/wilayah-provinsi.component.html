@@ -2,7 +2,7 @@
   <div class="d-flex flex-row-reverse mt-3">
     <button
       mat-raised-button
-      routerLink="/create-provinsi/{{ nik }}"
+      routerLink="/create-provinsi-auth/{{token}}"
       color="primary"
       style="height: 50px; font-size: 18px"
     >
@@ -138,9 +138,7 @@
                     <button
                       mat-icon-button
                       color="primary"
-                      routerLink="/edit-provinsi/{{ element.provinceId }}/{{
-                        nik
-                      }}"
+                      routerLink="/edit-provinsi-auth/{{ element.provinceId }}/{{token}}"
                     >
                       <!-- (click)="editProvinsi(element)" -->
                       <mat-icon>edit</mat-icon>

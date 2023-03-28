@@ -3,7 +3,7 @@
   height: 48px;
   margin: auto;
   position: relative;
-  transform: scale(2.5); /* Menambahkan skala dua kali lipat */
+  transform: scale(1.5); /* Menambahkan skala dua kali lipat */
 }
 .loader:before {
   content: "";

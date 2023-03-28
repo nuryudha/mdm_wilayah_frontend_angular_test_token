@@ -2,7 +2,7 @@
   <div class="d-flex flex-row-reverse mt-3">
     <button
       mat-raised-button
-      routerLink="/create-kabupaten/{{ nik }}"
+      routerLink="/create-kabupaten-auth/{{token}}"
       color="primary"
       style="height: 50px; font-size: 18px"
     >
@@ -146,9 +146,7 @@
                     <button
                       mat-icon-button
                       color="primary"
-                      routerLink="/edit-kabupaten/{{ element.cityId }}/{{
-                        nik
-                      }}"
+                      routerLink="/edit-kabupaten-auth/{{ element.cityId }}/{{token}}"
                     >
                       <mat-icon>edit</mat-icon>
                     </button>
